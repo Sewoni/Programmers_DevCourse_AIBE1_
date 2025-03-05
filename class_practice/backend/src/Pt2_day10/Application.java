@@ -12,22 +12,26 @@ import java.util.List;
 import java.util.logging.Logger;
 
 public class Application {
-    static List<Repo> repos;
-    static List<TIL> tils;
+    static List<Repo> repos;;
 
     public static void main(String[] args) {
         Logger logger = Logger.getLogger(Application.class.getName());
         CSVReader reader = new CSVReaderImpl();
 
         try {
-            repos = reader.read("til.csv");
+            repos = reader.read("class_practice/backend/src/Pt2_day10/model/dto/TIL.java");
             logger.info(repos.toString());
         } catch (FileNotFoundException e) {
             logger.severe(e.getMessage());
         }
 
         TILService service = new TILServiceImpl();
-        tils = service.getTIL(repos);
-        logger.info(tils.toString());
+        // 유저별-TIL csv를 만들 것
+//        for (Repo repo : repos) {
+//            List<TIL> tils = service.getTIL(repo);
+//            logger.info(tils.toString());
+//            // 파일로 나올 예정
+//        }
+        repos.stream().map(service::getTIL).map(Object::toString).forEach(logger::info);
     }
 }
