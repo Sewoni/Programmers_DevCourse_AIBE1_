@@ -1,5 +1,9 @@
 package org.example.mytarocard.model.repository;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.cdimascio.dotenv.Dotenv;
+import org.example.mytarocard.model.constant.LLMModel;
+import org.example.mytarocard.model.dto.GeminiPayload;
 import org.example.mytarocard.model.dto.LLMServiceParam;
 import org.example.mytarocard.model.dto.LLMServiceResponse;
 
@@ -8,6 +12,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class LLMRepository {
@@ -19,23 +24,35 @@ public class LLMRepository {
 
     private final Logger logger = Logger.getLogger(LLMRepository.class.getName());
     private final HttpClient client = HttpClient.newHttpClient();
-
+    private final ObjectMapper mapper = new ObjectMapper();
+    private final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
     // 나중에 수정이 필요하면 overloading 여러개의 파람.
-    public  String callModel(String model, String token, String platform, String prompt) throws IOException, InterruptedException {
-        String url = switch (platform) {
-            case "TOGETHER" -> "together";
-            case "GROK" -> "grok";
-            case "GEMINI" -> "gemini";
-            default -> throw new RuntimeException("Unknown platform: " + platform);
+    public  String callModel(LLMModel model, String prompt) throws IOException, InterruptedException {
+        String url = switch (model.platform) {
+            case GEMINI -> "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=%s".formatted(dotenv.get("GEMINI_KEY"));
+            default -> throw new RuntimeException("Unknown platform: " + model.platform);
         };
-        String[] headers = {};
-        String body = "";
+        String[] headers = switch (model.platform) {
+            case GEMINI -> new String[]{"Content-Type", "application/json"};
+            default -> throw new IllegalStateException("Unexpected platform: " + model.platform);
+        };
+        String body = switch (model.modelName) {
+            case "gemini-2.0-flash" -> mapper.writeValueAsString(new GeminiPayload(
+                    List.of(new GeminiPayload.Content("user", List.of(
+                            new GeminiPayload.Part(prompt))))
+            ));
+            default -> throw new RuntimeException("Unexpected model: " + model);
+        };
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .method("POST", HttpRequest.BodyPublishers.ofString(body))
                 .headers(headers)
                 .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        return "";
+        logger.info("%d".formatted(response.statusCode()));
+        if (response.statusCode() >= 400) {
+            logger.info(response.body());
+        }
+        return response.body();
     }
 }
