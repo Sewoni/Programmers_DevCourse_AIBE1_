@@ -1,4 +1,4 @@
 package org.example.springfromscratch.model.dto;
 
-public record MovieParam() {
+public record MovieParam(String targetDate) {
 }
