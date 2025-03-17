@@ -1,6 +1,7 @@
 package org.example.springfromscratch.controller;
 
 import org.example.springfromscratch.model.dto.MovieDTO;
+import org.example.springfromscratch.model.dto.MovieInfoDTO;
 import org.example.springfromscratch.service.MovieService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,7 +23,8 @@ public class MovieController {
 
     @GetMapping("/")
     public String index(Model model) throws Exception {
-        List<MovieDTO> movies = movieService.getMovies();
+//        List<MovieDTO> movies = movieService.getMovies();
+        List<MovieInfoDTO> movies = movieService.getMovieInfos();
         model.addAttribute("movies", movies);
         return "index";
     }
