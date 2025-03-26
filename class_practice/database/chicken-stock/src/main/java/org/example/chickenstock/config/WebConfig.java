@@ -1,28 +1,29 @@
 package org.example.chickenstock.config;
 
-import jakarta.servlet.FilterRegistration;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRegistration;
-import org.example.chickenstock.filter.EncodingFilter;
-import org.springframework.web.WebApplicationInitializer;
-import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
-import org.springframework.web.servlet.DispatcherServlet;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.ViewResolver;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
-public class WebAppInitializer implements WebApplicationInitializer {
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Bean
+    public ViewResolver viewResolver() {
+        InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
+        viewResolver.setPrefix("/WEB-INF/views/");
+        viewResolver.setSuffix(".jsp");
+        viewResolver.setOrder(1);
+        return viewResolver;
+    }
+
     @Override
-    public void onStartup(ServletContext servletContext) throws ServletException {
-        AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
-        context.register(AppConfig.class);
-
-        DispatcherServlet dispatcherServlet = new DispatcherServlet(context);
-        ServletRegistration.Dynamic registration = servletContext.addServlet("dispatcherServlet", dispatcherServlet);
-        registration.setLoadOnStartup(1);
-        registration.addMapping("/");
-
-        FilterRegistration.Dynamic encodingFilter = servletContext.addFilter(
-                "encodingFilter",
-                new EncodingFilter());
-        encodingFilter.addMappingForUrlPatterns(null, true, "/*");
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/asset/**")
+                .addResourceLocations("/asset/"); // 또는 "classpath:/static/asset/"
     }
 }
